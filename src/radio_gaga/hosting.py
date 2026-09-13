@@ -29,7 +29,9 @@ radio_gaga_logger.propagate = False
 if not radio_gaga_logger.handlers:
     handler = logging.StreamHandler()
     handler.setFormatter(
-        logging.Formatter("%(asctime)s %(levelname)s %(name)s: %(message)s")
+        logging.Formatter(
+            "\033[32m%(asctime)s %(levelname)s %(name)s: %(message)s\033[0m"
+        )
     )
     radio_gaga_logger.addHandler(handler)
 
