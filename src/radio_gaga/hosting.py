@@ -67,11 +67,21 @@ def _(c: Container) -> IChatClient:
     return c[ChatClient]
 
 
-@dependency_definition(container)
+@dependency_definition(container, singleton=True)
 def _(c: Container) -> IChatHistoryCompaction:
-    from radio_gaga.services.chat_history_compaction import ChatHistoryCompaction
+    strategy = os.getenv("CHAT_HISTORY_COMPACTION_STRATEGY", "by_tokens")
+    if strategy == "by_tokens":
+        from radio_gaga.services.chat_history_compaction_by_tokens import (
+            ChatHistoryCompactionByTokens,
+        )
 
-    return c[ChatHistoryCompaction]
+        return c[ChatHistoryCompactionByTokens]
+
+    from radio_gaga.services.chat_history_compaction_by_turns import (
+        ChatHistoryCompactionByTurns,
+    )
+
+    return c[ChatHistoryCompactionByTurns]
 
 
 @dependency_definition(container)

@@ -1,10 +1,14 @@
 from typing import Protocol
 
-from agent_framework import Message
+from agent_framework import AgentSession, Message
 from agent_framework.foundry import FoundryChatClient
 
 
 class IChatHistoryCompaction(Protocol):
+    def initialize_session(self, session: AgentSession) -> None:
+        """Restore compaction state from a loaded session."""
+        ...
+
     def set_summarization_strategy(self, chat_client: FoundryChatClient) -> None:
         """Set summarization strategy for a chat client
 
@@ -23,5 +27,13 @@ class IChatHistoryCompaction(Protocol):
 
         Returns:
             bool: True if compaction was successful, False otherwise.
+        """
+        ...
+
+    def sync_session(self, session: AgentSession) -> None:
+        """Copy the latest successful compaction into persisted session state.
+
+        Args:
+            session (AgentSession): The agent session to sync the compaction state into.
         """
         ...

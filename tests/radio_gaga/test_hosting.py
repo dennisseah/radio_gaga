@@ -26,13 +26,37 @@ def test_container_resolves_chat_agent() -> None:
         assert container[IChatAgent] is chat_agent
 
 
-def test_container_resolves_compaction_service() -> None:
+def test_container_resolves_compaction_service(
+    monkeypatch,
+) -> None:
+    monkeypatch.setenv("CHAT_HISTORY_COMPACTION_STRATEGY", "by_turns")
     compaction_service = Mock()
     with patch(
-        "radio_gaga.services.chat_history_compaction.ChatHistoryCompaction",
+        "radio_gaga.services.chat_history_compaction_by_turns.ChatHistoryCompactionByTurns",
         return_value=compaction_service,
     ):
         assert container[IChatHistoryCompaction] is compaction_service
+
+
+def test_container_resolves_token_compaction_service(monkeypatch) -> None:
+    monkeypatch.setenv("CHAT_HISTORY_COMPACTION_STRATEGY", "by_tokens")
+    reloaded_hosting = importlib.reload(hosting)
+    compaction_service = Mock()
+
+    with patch(
+        "radio_gaga.services.chat_history_compaction_by_tokens.ChatHistoryCompactionByTokens",
+        return_value=compaction_service,
+    ):
+        assert reloaded_hosting.container[IChatHistoryCompaction] is compaction_service
+
+    importlib.reload(hosting)
+
+
+def test_container_shares_compaction_service_instance() -> None:
+    first = container[IChatHistoryCompaction]
+    second = container[IChatHistoryCompaction]
+
+    assert first is second
 
 
 def test_container_resolves_session_store() -> None:

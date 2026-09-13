@@ -1,5 +1,7 @@
 from unittest.mock import Mock, patch
 
+import pytest
+
 from radio_gaga.services.chat_agent import ChatAgent
 
 
@@ -48,3 +50,35 @@ def test_get_agent_returns_constructed_agent() -> None:
         chat_agent = ChatAgent(Mock(), Mock(), Mock())
 
     assert chat_agent.get_agent() is created_agent
+
+
+@pytest.mark.asyncio
+async def test_stream_returns_combined_text_and_logs_first_response() -> None:
+    compaction_service = Mock()
+    chat_client = Mock()
+    model_client = Mock()
+    logger = Mock()
+    created_agent = Mock()
+
+    async def chunks():
+        yield Mock(text="hello")
+        yield Mock(text=" world")
+
+    created_agent.run.return_value = chunks()
+    chat_client.get_client.return_value = model_client
+
+    with (
+        patch("radio_gaga.services.chat_agent.Agent", return_value=created_agent),
+        patch(
+            "radio_gaga.services.chat_agent.get_system_prompt", return_value="prompt"
+        ),
+        patch(
+            "radio_gaga.services.chat_agent.time.perf_counter",
+            side_effect=[10.0, 10.5],
+        ),
+    ):
+        chat_agent = ChatAgent(compaction_service, chat_client, logger)
+
+        assert await chat_agent.stream("question", Mock()) == "hello world"
+
+    logger.info.assert_any_call("Time taken to start agent response: 0.50 seconds")
