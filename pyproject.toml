@@ -1,0 +1,59 @@
+[project]
+name = "radio-gaga"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "agent-framework>=1.17.0",
+    "azure-identity>=1.25.3",
+    "jinja2>=3.1.6",
+    "lagom>=2.7.7",
+    "pydantic>=2.13.5",
+    "python-dotenv>=1.2.3",
+]
+
+[dependency-groups]
+dev = [
+    "pip-audit>=2.10.1",
+    "pre-commit>=4.6.2",
+    "pyright>=1.1.411",
+    "pytest>=9.1.1",
+    "pytest-cov>=7.0.0",
+    "pytest-asyncio>=1.4.0",
+    "pytest-mock>=3.15.1",
+    "ruff>=0.16.6",
+]
+
+[[tool.uv.index]]
+name = "microsoft-pypi"
+url = "https://packagefeedproxy.microsoft.io/pypi/simple/"
+default = true
+
+[tool.ruff]
+exclude = ["typings", ".venv"]
+
+[tool.ruff.lint]
+preview = true
+select = ["E", "W", "F", "I", "TID"]
+
+[tool.ruff.format]
+docstring-code-format = true
+
+[tool.pyright]
+venvPath = "."
+venv = ".venv"
+reportMissingTypeStubs = false
+exclude = ["typings", ".venv", ".vscode", ".git", "**/node_modules", "**/__pycache__", "**/.*"]
+
+[tool.coverage.report]
+fail_under = 90
+
+[tool.coverage.run]
+source = ["radio_gaga"]
+
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]
+addopts = "-v"
