@@ -2,9 +2,11 @@ from typing import Protocol
 
 from agent_framework import Agent, AgentSession
 
+from radio_gaga.models.chat_response import ChatResponse
+
 
 class IChatAgent(Protocol):
-    async def stream(self, user_message: str, session: AgentSession) -> str:
+    async def stream(self, user_message: str, session: AgentSession) -> ChatResponse:
         """
         Stream the agent's response to a user message.
 
@@ -13,7 +15,8 @@ class IChatAgent(Protocol):
             session (AgentSession): The agent session to use for the conversation.
 
         Returns:
-            str: The agent's response.
+            ChatResponse: The agent's response containing the text, start generation
+            time, and time taken.
         """
         ...
 

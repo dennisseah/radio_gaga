@@ -24,6 +24,8 @@ class ChatHistoryCompactionByTokens(ChatHistoryCompactionBase, IChatHistoryCompa
         super().initialize_session(session)
 
     def set_summarization_strategy(self, chat_client: FoundryChatClient) -> None:
+        # The local token gate controls when compaction starts; this strategy
+        # controls how the selected history is summarized and retained.
         self._summarization_strategy = SummarizationStrategy(
             client=chat_client,
             target_count=1,
@@ -33,7 +35,7 @@ class ChatHistoryCompactionByTokens(ChatHistoryCompactionBase, IChatHistoryCompa
         )
 
     def _get_token_count(self, messages: list[Message]) -> int:
-        # Use the same lightweight estimator supplied to SummarizationStrategy.
+        # Use the same lightweight estimator supplied to the summarizer.
         return sum(
             self._tokenizer.count_tokens(json.dumps(message.to_dict(), sort_keys=True))
             for message in messages
@@ -41,7 +43,8 @@ class ChatHistoryCompactionByTokens(ChatHistoryCompactionBase, IChatHistoryCompa
         )
 
     async def compact_history(self, messages: list[Message]) -> bool:
-        # Own the trigger so message-count defaults cannot cause early compaction.
+        # Gate on estimated tokens so framework message-count defaults do not
+        # trigger compaction early.
         if self._get_token_count(messages) < self._max_summary_input_tokens:
             return False
         return await self._compact_history(messages)

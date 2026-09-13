@@ -15,6 +15,7 @@ class ChatHistoryCompactionByTurns(ChatHistoryCompactionBase, IChatHistoryCompac
     _last_compaction_turn_count: int = 0
 
     def set_summarization_strategy(self, chat_client: FoundryChatClient) -> None:
+        # Retain the configured number of recent turn groups after summarization.
         self._summarization_strategy = SummarizationStrategy(
             client=chat_client,
             target_count=self._turns_before_compaction,
@@ -22,6 +23,7 @@ class ChatHistoryCompactionByTurns(ChatHistoryCompactionBase, IChatHistoryCompac
         )
 
     def _get_turn_count(self, messages: list[Message]) -> int:
+        # Count only eligible user messages; assistant replies belong to the same turn.
         return sum(
             message.role == "user" and not self._is_excluded(message)
             for message in messages
@@ -30,13 +32,13 @@ class ChatHistoryCompactionByTurns(ChatHistoryCompactionBase, IChatHistoryCompac
     def initialize_session(self, session: AgentSession) -> None:
         super().initialize_session(session)
         messages = self._get_session_messages(session)
-        # Continue counting from persisted history after an application restart.
+        # Continue from persisted history so a restart does not retrigger immediately.
         self._last_compaction_turn_count = self._get_turn_count(messages)
 
     async def compact_history(self, messages: list[Message]) -> bool:
         turn_count = self._get_turn_count(messages)
         turns_since_compaction = turn_count - self._last_compaction_turn_count
-        # Turn compaction is gated before invoking the model-backed strategy.
+        # Only invoke the model-backed summarizer after enough new turns accumulate.
         if turns_since_compaction < self._turns_before_compaction:
             return False
 

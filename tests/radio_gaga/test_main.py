@@ -4,13 +4,24 @@ from unittest.mock import AsyncMock, MagicMock, Mock, patch
 import pytest
 
 from radio_gaga.main import MyAgent
+from radio_gaga.models.chat_response import ChatResponse, ChatTokenUsage
 
 
 @pytest.mark.asyncio
 async def test_run_reports_time_to_first_response_and_persists_once() -> None:
     session = Mock()
     chat_agent = Mock()
-    chat_agent.stream = AsyncMock(side_effect=["hello", "hello"])
+    response = ChatResponse(
+        text="hello",
+        start_generation_time=0.5,
+        time_taken=1.0,
+        token_usage=ChatTokenUsage(
+            prompt_tokens=1,
+            completion_tokens=1,
+            total_tokens=2,
+        ),
+    )
+    chat_agent.stream = AsyncMock(side_effect=[response, response])
     session_store = Mock()
     session_store.load_session.return_value = session
     logger = Mock()

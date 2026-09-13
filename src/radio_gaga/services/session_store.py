@@ -18,6 +18,7 @@ class SessionStore(ISessionStore):
     _logger: logging.Logger
 
     def load_session(self, agent: Agent) -> AgentSession:
+        # Start a fresh conversation when no persisted session exists yet.
         if not SESSION_FILE.exists():
             return agent.create_session()
 
@@ -25,6 +26,7 @@ class SessionStore(ISessionStore):
             session_data = json.loads(SESSION_FILE.read_text(encoding="utf-8"))
             return AgentSession.from_dict(session_data)
         except (OSError, KeyError, TypeError, ValueError) as error:
+            # Preserve the broken file for diagnosis before starting fresh.
             self._logger.warning("Unable to load saved session: %s", error)
             self._quarantine_invalid_session()
             return agent.create_session()
@@ -44,6 +46,7 @@ class SessionStore(ISessionStore):
         temporary_path: str | None = None
         try:
             SESSION_FILE.parent.mkdir(parents=True, exist_ok=True)
+            # Write and fsync a sibling file before replacing the session atomically.
             with tempfile.NamedTemporaryFile(
                 mode="w",
                 encoding="utf-8",

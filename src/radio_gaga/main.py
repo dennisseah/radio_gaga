@@ -26,7 +26,20 @@ class MyAgent:
         response = await self._chat_agent.stream(
             user_message=user_message, session=session
         )
-        print(response, flush=True)
+        print(response.text, flush=True)
+        self._logger.info(
+            f"Start generation time: {response.start_generation_time:.2f} seconds"
+        )
+        self._logger.info(f"Time taken: {response.time_taken:.2f} seconds")
+        self._logger.info(
+            "Token usage: prompt=%d completion=%d total=%d "
+            "cache_creation=%d cache_read=%d",
+            response.token_usage.prompt_tokens,
+            response.token_usage.completion_tokens,
+            response.token_usage.total_tokens,
+            response.token_usage.cache_creation_input_tokens,
+            response.token_usage.cache_read_input_tokens,
+        )
         return True
 
     async def run(self) -> None:

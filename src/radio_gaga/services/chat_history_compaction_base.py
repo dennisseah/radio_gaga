@@ -26,6 +26,7 @@ class ChatHistoryCompactionBase:
 
     def initialize_session(self, session: AgentSession) -> None:
         """Initialize strategy state from a loaded session when needed."""
+        # Discard any snapshot left by a previous application session.
         self._reset_pending_compaction()
 
     @staticmethod
@@ -61,6 +62,7 @@ class ChatHistoryCompactionBase:
         self._logger.info(f"Compacted: {compacted}")
 
         if compacted:
+            # Keep the compacted list until the outer session can persist it.
             self._compaction_count += 1
             self._compacted_messages = list(messages)
             summary_message = next(
@@ -86,6 +88,7 @@ class ChatHistoryCompactionBase:
         if self._compacted_messages is None:
             return
 
+        # The framework compacts a request-local list, so merge it into durable state.
         source_message_ids = self._compaction_source_message_ids or set()
         source_fingerprints = self._compaction_source_message_fingerprints or Counter()
         history = session.state.get("in_memory")
@@ -99,6 +102,7 @@ class ChatHistoryCompactionBase:
                 if message.message_id in source_message_ids:
                     continue
             else:
+                # Older messages may lack IDs; fingerprints prevent duplicate writes.
                 fingerprint = self._message_fingerprint(message)
                 if source_fingerprints[fingerprint] > 0:
                     source_fingerprints[fingerprint] -= 1
