@@ -21,6 +21,14 @@ repos:
         args: ["--frozen", "--all-groups", "--output-file=requirements.dev.txt"]
   - repo: local
     hooks:
+      - id: unit-tests
+        name: unit tests
+        entry:
+          uv run python -m pytest -p no:warnings --cov-report term-missing
+          --cov=radio_gaga tests
+        language: system
+        pass_filenames: false
+        always_run: true
       - id: pip-audit
         name: pip-audit
         entry: uv run pip-audit
