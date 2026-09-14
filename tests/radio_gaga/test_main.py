@@ -9,7 +9,6 @@ from radio_gaga.models.chat_response import ChatResponse, ChatTokenUsage
 
 @pytest.mark.asyncio
 async def test_run_reports_time_to_first_response_and_persists_once() -> None:
-    session = Mock()
     chat_agent = Mock()
     response = ChatResponse(
         text="hello",
@@ -22,45 +21,37 @@ async def test_run_reports_time_to_first_response_and_persists_once() -> None:
         ),
     )
     chat_agent.stream = AsyncMock(side_effect=[response, response])
-    session_store = Mock()
-    session_store.load_session.return_value = session
+    session = Mock()
+    chat_agent.initialize.return_value = session
     logger = Mock()
-    compaction_service = Mock()
     read_input = AsyncMock(side_effect=["question", "another question", "exit"])
 
     with patch("radio_gaga.main.asyncio.to_thread", read_input):
-        await MyAgent(chat_agent, session_store, logger, compaction_service).run()
+        await MyAgent(chat_agent, logger).run()
 
-    chat_agent.get_agent.assert_called_once_with()
-    session_store.load_session.assert_called_once_with(
-        chat_agent.get_agent.return_value
-    )
-    compaction_service.initialize_session.assert_called_once_with(session)
+    chat_agent.initialize.assert_called_once_with()
     assert chat_agent.stream.call_count == 2
     chat_agent.stream.assert_any_await(user_message="question", session=session)
     chat_agent.stream.assert_any_await(user_message="another question", session=session)
-    session_store.persist_session.assert_called_once_with(session)
-    compaction_service.sync_session.assert_called_once_with(session)
+    chat_agent.terminate.assert_called_once_with(session)
 
 
 @pytest.mark.asyncio
 async def test_run_persists_when_agent_raises() -> None:
-    session = Mock()
     chat_agent = Mock()
     chat_agent.stream = AsyncMock(side_effect=RuntimeError("agent failed"))
-    session_store = Mock()
-    session_store.load_session.return_value = session
-    compaction_service = Mock()
+    session = Mock()
+    chat_agent.initialize.return_value = session
     read_input = AsyncMock(return_value="question")
 
     with (
         patch("radio_gaga.main.asyncio.to_thread", read_input),
         pytest.raises(RuntimeError, match="agent failed"),
     ):
-        await MyAgent(chat_agent, session_store, Mock(), compaction_service).run()
+        await MyAgent(chat_agent, Mock()).run()
 
-    compaction_service.initialize_session.assert_called_once_with(session)
-    session_store.persist_session.assert_called_once_with(session)
+    chat_agent.initialize.assert_called_once_with()
+    chat_agent.terminate.assert_called_once_with(session)
 
 
 def test_module_entrypoint_runs_main_agent() -> None:

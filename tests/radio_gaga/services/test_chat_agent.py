@@ -23,7 +23,8 @@ def test_initializes_agent_with_configured_dependencies() -> None:
             return_value="system instructions",
         ),
     ):
-        chat_agent = ChatAgent(compaction_service, chat_client, logger)
+        session_store = Mock()
+        chat_agent = ChatAgent(chat_client, compaction_service, session_store, logger)
 
     logger.info.assert_called_once_with("Initializing ChatAgent")
     chat_client.get_client.assert_called_once_with()
@@ -35,7 +36,8 @@ def test_initializes_agent_with_configured_dependencies() -> None:
         compaction_strategy=compaction_service.compact_history,
         default_options={"store": False},
     )
-    assert chat_agent.get_agent() is created_agent
+    assert chat_agent.initialize() is session_store.load_session.return_value
+    session_store.load_session.assert_called_once_with(created_agent)
 
 
 def test_get_agent_returns_constructed_agent() -> None:
@@ -47,9 +49,19 @@ def test_get_agent_returns_constructed_agent() -> None:
             "radio_gaga.services.chat_agent.get_system_prompt", return_value="prompt"
         ),
     ):
-        chat_agent = ChatAgent(Mock(), Mock(), Mock())
+        chat_agent = ChatAgent(Mock(), Mock(), Mock(), Mock())
 
-    assert chat_agent.get_agent() is created_agent
+    assert chat_agent._agent is created_agent
+
+
+def test_terminate_persists_session() -> None:
+    session_store = Mock()
+    chat_agent = ChatAgent(Mock(), Mock(), session_store, Mock())
+    session = Mock()
+
+    chat_agent.terminate(session)
+
+    session_store.persist_session.assert_called_once_with(session)
 
 
 @pytest.mark.asyncio
@@ -85,7 +97,7 @@ async def test_stream_returns_combined_text_and_logs_first_response() -> None:
             side_effect=[10.0, 10.5, 11.0],
         ),
     ):
-        chat_agent = ChatAgent(compaction_service, chat_client, logger)
+        chat_agent = ChatAgent(chat_client, compaction_service, Mock(), logger)
 
         response = await chat_agent.stream("question", Mock())
 
@@ -112,7 +124,7 @@ async def test_stream_allows_response_without_text_chunks() -> None:
             "radio_gaga.services.chat_agent.get_system_prompt", return_value="prompt"
         ),
     ):
-        chat_agent = ChatAgent(Mock(), Mock(), Mock())
+        chat_agent = ChatAgent(Mock(), Mock(), Mock(), Mock())
 
         response = await chat_agent.stream("question", Mock())
 

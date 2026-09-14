@@ -19,5 +19,5 @@ class ISessionStore(Protocol):
         """Persist session data
 
         Args:
-            session (_type_): agent session to persist.
+            session (AgentSession): agent session to persist.
         """

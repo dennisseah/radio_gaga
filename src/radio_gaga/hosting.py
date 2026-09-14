@@ -84,7 +84,7 @@ def _(c: Container) -> IChatHistoryCompaction:
     return c[ChatHistoryCompactionByTurns]
 
 
-@dependency_definition(container)
+@dependency_definition(container, singleton=True)
 def _(c: Container) -> ISessionStore:
     from radio_gaga.services.session_store import SessionStore
 

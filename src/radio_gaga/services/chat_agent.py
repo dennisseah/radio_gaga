@@ -9,12 +9,14 @@ from radio_gaga.models.chat_response import ChatResponse, ChatTokenUsage
 from radio_gaga.protocols.i_chat_agent import IChatAgent
 from radio_gaga.protocols.i_chat_client import IChatClient
 from radio_gaga.protocols.i_chat_history_compaction import IChatHistoryCompaction
+from radio_gaga.protocols.i_session_store import ISessionStore
 
 
 @dataclass
 class ChatAgent(IChatAgent):
-    _compaction_service: IChatHistoryCompaction
     _chat_client: IChatClient
+    _compaction_service: IChatHistoryCompaction
+    _session_store: ISessionStore
     _logger: logging.Logger
 
     def __post_init__(self) -> None:
@@ -45,12 +47,14 @@ class ChatAgent(IChatAgent):
                 if start_gen_time is None:
                     start_gen_time = time.perf_counter() - time_start
                 response.append(chunk.text)
+                print(chunk.text, end="", flush=True)
+        print()
 
         # Usage metadata is available on the finalized response, not stream updates.
         final_response = await async_stream.get_final_response()
         usage_details = final_response.usage_details or {}
 
-        return ChatResponse(
+        resp = ChatResponse(
             text="".join(response),
             start_generation_time=start_gen_time or 0.0,
             time_taken=time.perf_counter() - time_start,
@@ -68,6 +72,27 @@ class ChatAgent(IChatAgent):
                 or 0,
             ),
         )
+        self._logger.info(
+            f"Start generation time: {resp.start_generation_time:.2f} seconds"
+        )
+        self._logger.info(f"Time taken: {resp.time_taken:.2f} seconds")
+        self._logger.info(
+            "Token usage: prompt=%d completion=%d total=%d "
+            "cache_creation=%d cache_read=%d",
+            resp.token_usage.prompt_tokens,
+            resp.token_usage.completion_tokens,
+            resp.token_usage.total_tokens,
+            resp.token_usage.cache_creation_input_tokens,
+            resp.token_usage.cache_read_input_tokens,
+        )
 
-    def get_agent(self) -> Agent:
-        return self._agent
+        return resp
+
+    def initialize(self) -> AgentSession:
+        session = self._session_store.load_session(self._agent)
+        self._compaction_service.initialize_session(session)
+        return session
+
+    def terminate(self, session: AgentSession) -> None:
+        self._compaction_service.sync_session(session)
+        self._session_store.persist_session(session)

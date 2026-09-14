@@ -1,6 +1,6 @@
 from typing import Protocol
 
-from agent_framework import Agent, AgentSession
+from agent_framework import AgentSession
 
 from radio_gaga.models.chat_response import ChatResponse
 
@@ -20,8 +20,20 @@ class IChatAgent(Protocol):
         """
         ...
 
-    def get_agent(self) -> Agent:
+    def initialize(self) -> AgentSession:
         """
-        Returns the underlying Agent instance.
+        Initialize the agent
+
+        Returns:
+            AgentSession: The initialized agent session.
+        """
+        ...
+
+    def terminate(self, session: AgentSession) -> None:
+        """
+        Terminate the agent session.
+
+        Args:
+            session (AgentSession): The agent session to terminate.
         """
         ...
