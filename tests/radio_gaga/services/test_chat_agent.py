@@ -5,7 +5,8 @@ import pytest
 from radio_gaga.services.chat_agent import ChatAgent
 
 
-def test_initializes_agent_with_configured_dependencies() -> None:
+@pytest.mark.asyncio
+async def test_initializes_agent_with_configured_dependencies() -> None:
     compaction_service = Mock()
     chat_client = Mock()
     model_client = Mock()
@@ -36,7 +37,8 @@ def test_initializes_agent_with_configured_dependencies() -> None:
         compaction_strategy=compaction_service.compact_history,
         default_options={"store": False},
     )
-    assert chat_agent.initialize() is session_store.load_session.return_value
+    async with chat_agent.get_session() as session:
+        assert session is session_store.load_session.return_value
     session_store.load_session.assert_called_once_with(created_agent)
 
 
@@ -54,27 +56,20 @@ def test_get_agent_returns_constructed_agent() -> None:
     assert chat_agent._agent is created_agent
 
 
-def test_terminate_persists_session() -> None:
-    session_store = Mock()
-    chat_agent = ChatAgent(Mock(), Mock(), session_store, Mock())
-    session = Mock()
-
-    chat_agent.terminate(session)
-
-    session_store.persist_session.assert_called_once_with(session)
-
-
 @pytest.mark.asyncio
 async def test_get_session_initializes_and_terminates_session() -> None:
     session_store = Mock()
+    compaction_service = Mock()
     session = Mock()
     session_store.load_session.return_value = session
-    chat_agent = ChatAgent(Mock(), Mock(), session_store, Mock())
+    chat_agent = ChatAgent(Mock(), compaction_service, session_store, Mock())
 
     async with chat_agent.get_session() as active_session:
         assert active_session is session
 
     session_store.load_session.assert_called_once_with(chat_agent._agent)
+    compaction_service.initialize_session.assert_called_once_with(session)
+    compaction_service.sync_session.assert_called_once_with(session)
     session_store.persist_session.assert_called_once_with(session)
 
 

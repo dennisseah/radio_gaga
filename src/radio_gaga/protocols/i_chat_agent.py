@@ -28,21 +28,3 @@ class IChatAgent(Protocol):
             time, and time taken.
         """
         ...
-
-    def initialize(self) -> AgentSession:
-        """
-        Initialize the agent
-
-        Returns:
-            AgentSession: The initialized agent session.
-        """
-        ...
-
-    def terminate(self, session: AgentSession) -> None:
-        """
-        Terminate the agent session.
-
-        Args:
-            session (AgentSession): The agent session to terminate.
-        """
-        ...

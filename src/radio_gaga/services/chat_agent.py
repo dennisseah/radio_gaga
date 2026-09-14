@@ -1,6 +1,6 @@
 import logging
 import time
-from collections.abc import AsyncIterator
+from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
 from dataclasses import dataclass
 
@@ -90,19 +90,12 @@ class ChatAgent(IChatAgent):
 
         return resp
 
-    def initialize(self) -> AgentSession:
+    @asynccontextmanager
+    async def get_session(self) -> AsyncGenerator[AgentSession, None]:
         session = self._session_store.load_session(self._agent)
         self._compaction_service.initialize_session(session)
-        return session
-
-    def terminate(self, session: AgentSession) -> None:
-        self._compaction_service.sync_session(session)
-        self._session_store.persist_session(session)
-
-    @asynccontextmanager
-    async def get_session(self) -> AsyncIterator[AgentSession]:
-        session = self.initialize()
         try:
             yield session
         finally:
-            self.terminate(session)
+            self._compaction_service.sync_session(session)
+            self._session_store.persist_session(session)
