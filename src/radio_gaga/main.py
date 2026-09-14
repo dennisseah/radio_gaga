@@ -23,13 +23,9 @@ class MyAgent:
         return True
 
     async def run(self) -> None:
-        session = self._chat_agent.initialize()
-
-        try:
+        async with self._chat_agent.get_session() as session:
             while await self.each_turn(session):
                 pass
-        finally:
-            self._chat_agent.terminate(session)
 
 
 if __name__ == "__main__":

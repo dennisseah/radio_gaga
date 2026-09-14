@@ -23,17 +23,19 @@ async def test_run_reports_time_to_first_response_and_persists_once() -> None:
     chat_agent.stream = AsyncMock(side_effect=[response, response])
     session = Mock()
     chat_agent.initialize.return_value = session
+    chat_agent.get_session.return_value.__aenter__ = AsyncMock(return_value=session)
+    chat_agent.get_session.return_value.__aexit__ = AsyncMock(return_value=None)
     logger = Mock()
     read_input = AsyncMock(side_effect=["question", "another question", "exit"])
 
     with patch("radio_gaga.main.asyncio.to_thread", read_input):
         await MyAgent(chat_agent, logger).run()
 
-    chat_agent.initialize.assert_called_once_with()
+    chat_agent.get_session.assert_called_once_with()
     assert chat_agent.stream.call_count == 2
     chat_agent.stream.assert_any_await(user_message="question", session=session)
     chat_agent.stream.assert_any_await(user_message="another question", session=session)
-    chat_agent.terminate.assert_called_once_with(session)
+    chat_agent.get_session.return_value.__aexit__.assert_awaited_once()
 
 
 @pytest.mark.asyncio
@@ -42,6 +44,8 @@ async def test_run_persists_when_agent_raises() -> None:
     chat_agent.stream = AsyncMock(side_effect=RuntimeError("agent failed"))
     session = Mock()
     chat_agent.initialize.return_value = session
+    chat_agent.get_session.return_value.__aenter__ = AsyncMock(return_value=session)
+    chat_agent.get_session.return_value.__aexit__ = AsyncMock(return_value=None)
     read_input = AsyncMock(return_value="question")
 
     with (
@@ -50,8 +54,8 @@ async def test_run_persists_when_agent_raises() -> None:
     ):
         await MyAgent(chat_agent, Mock()).run()
 
-    chat_agent.initialize.assert_called_once_with()
-    chat_agent.terminate.assert_called_once_with(session)
+    chat_agent.get_session.assert_called_once_with()
+    chat_agent.get_session.return_value.__aexit__.assert_awaited_once()
 
 
 def test_module_entrypoint_runs_main_agent() -> None:

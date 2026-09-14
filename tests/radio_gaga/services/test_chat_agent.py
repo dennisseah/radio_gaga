@@ -65,6 +65,20 @@ def test_terminate_persists_session() -> None:
 
 
 @pytest.mark.asyncio
+async def test_get_session_initializes_and_terminates_session() -> None:
+    session_store = Mock()
+    session = Mock()
+    session_store.load_session.return_value = session
+    chat_agent = ChatAgent(Mock(), Mock(), session_store, Mock())
+
+    async with chat_agent.get_session() as active_session:
+        assert active_session is session
+
+    session_store.load_session.assert_called_once_with(chat_agent._agent)
+    session_store.persist_session.assert_called_once_with(session)
+
+
+@pytest.mark.asyncio
 async def test_stream_returns_combined_text_and_logs_first_response() -> None:
     compaction_service = Mock()
     chat_client = Mock()
