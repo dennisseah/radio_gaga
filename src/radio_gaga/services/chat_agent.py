@@ -8,14 +8,14 @@ from agent_framework import Agent, AgentSession
 
 from radio_gaga.commons.prompts import get_system_prompt
 from radio_gaga.models.chat_response import ChatResponse, ChatTokenUsage
-from radio_gaga.protocols.i_chat_agent import IChatAgent
 from radio_gaga.protocols.i_chat_client import IChatClient
 from radio_gaga.protocols.i_chat_history_compaction import IChatHistoryCompaction
+from radio_gaga.protocols.i_planner_agent import IPlannerAgent
 from radio_gaga.protocols.i_session_store import ISessionStore
 
 
 @dataclass
-class ChatAgent(IChatAgent):
+class PlannerAgent(IPlannerAgent):
     _chat_client: IChatClient
     _compaction_service: IChatHistoryCompaction
     _session_store: ISessionStore

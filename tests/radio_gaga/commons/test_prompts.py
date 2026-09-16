@@ -17,3 +17,13 @@ def test_get_system_prompt_includes_safety_boundaries() -> None:
     assert "professional tone appropriate for a medical website" in prompt
     assert "Do not entertain inappropriate, frivolous, role-playing" in prompt
     assert 'echo phrases such as "I am Batman."' in prompt
+    assert "Response workflow:" in prompt
+    assert 'exact order: "Plan" followed by "Execution."' in prompt
+    assert "output only one valid JSON object in a fenced `json` code block" in prompt
+    assert (
+        '{"goal":"string","steps":["string"],"professional_follow_up":"string or null"}'
+        in prompt
+    )
+    assert 'After the JSON plan, output the "Execution" section' in prompt
+    assert "never stop after presenting only the plan" in prompt
+    assert "the answer, private chain-of-thought, or hidden reasoning" in prompt

@@ -4,9 +4,9 @@ from unittest.mock import Mock, patch
 
 import radio_gaga.hosting as hosting
 from radio_gaga.hosting import container
-from radio_gaga.protocols.i_chat_agent import IChatAgent
 from radio_gaga.protocols.i_chat_client import IChatClient
 from radio_gaga.protocols.i_chat_history_compaction import IChatHistoryCompaction
+from radio_gaga.protocols.i_planner_agent import IPlannerAgent
 from radio_gaga.protocols.i_session_store import ISessionStore
 
 
@@ -20,10 +20,12 @@ def test_container_resolves_chat_client() -> None:
         assert container[IChatClient] is chat_client
 
 
-def test_container_resolves_chat_agent() -> None:
-    chat_agent = Mock()
-    with patch("radio_gaga.services.chat_agent.ChatAgent", return_value=chat_agent):
-        assert container[IChatAgent] is chat_agent
+def test_container_resolves_planner_agent() -> None:
+    planner_agent = Mock()
+    with patch(
+        "radio_gaga.services.chat_agent.PlannerAgent", return_value=planner_agent
+    ):
+        assert container[IPlannerAgent] is planner_agent
 
 
 def test_container_resolves_compaction_service(

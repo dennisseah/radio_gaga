@@ -12,9 +12,9 @@ from pathlib import Path
 from dotenv import load_dotenv
 from lagom import Container, dependency_definition
 
-from radio_gaga.protocols.i_chat_agent import IChatAgent
 from radio_gaga.protocols.i_chat_client import IChatClient
 from radio_gaga.protocols.i_chat_history_compaction import IChatHistoryCompaction
+from radio_gaga.protocols.i_planner_agent import IPlannerAgent
 from radio_gaga.protocols.i_session_store import ISessionStore
 
 load_dotenv(dotenv_path=Path(__file__).resolve().parents[2] / ".env")
@@ -54,13 +54,13 @@ def _() -> logging.Logger:
 
 
 @dependency_definition(container, singleton=True)
-def _(c: Container) -> IChatAgent:
-    from radio_gaga.services.chat_agent import ChatAgent
+def _(c: Container) -> IPlannerAgent:
+    from radio_gaga.services.chat_agent import PlannerAgent
 
-    return c[ChatAgent]
+    return c[PlannerAgent]
 
 
-@dependency_definition(container, singleton=True)
+@dependency_definition(container)
 def _(c: Container) -> IChatClient:
     from radio_gaga.services.chat_client import ChatClient
 

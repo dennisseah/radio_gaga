@@ -6,7 +6,7 @@ from agent_framework import AgentSession
 from radio_gaga.models.chat_response import ChatResponse
 
 
-class IChatAgent(Protocol):
+class IPlannerAgent(Protocol):
     def get_session(self) -> AbstractAsyncContextManager[AgentSession]:
         """Return a managed session scope.
 

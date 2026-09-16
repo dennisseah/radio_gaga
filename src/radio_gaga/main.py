@@ -5,12 +5,12 @@ from dataclasses import dataclass
 from agent_framework import AgentSession
 
 from radio_gaga.hosting import container
-from radio_gaga.protocols.i_chat_agent import IChatAgent
+from radio_gaga.protocols.i_planner_agent import IPlannerAgent
 
 
 @dataclass
 class MyAgent:
-    _chat_agent: IChatAgent
+    _chat_agent: IPlannerAgent
     _logger: logging.Logger
 
     async def each_turn(self, session: AgentSession) -> bool:

@@ -2,7 +2,7 @@ from unittest.mock import AsyncMock, MagicMock, Mock, patch
 
 import pytest
 
-from radio_gaga.services.chat_agent import ChatAgent
+from radio_gaga.services.chat_agent import PlannerAgent
 
 
 @pytest.mark.asyncio
@@ -25,7 +25,9 @@ async def test_initializes_agent_with_configured_dependencies() -> None:
         ),
     ):
         session_store = Mock()
-        chat_agent = ChatAgent(chat_client, compaction_service, session_store, logger)
+        chat_agent = PlannerAgent(
+            chat_client, compaction_service, session_store, logger
+        )
 
     logger.info.assert_called_once_with("Initializing ChatAgent")
     chat_client.get_client.assert_called_once_with()
@@ -51,7 +53,7 @@ def test_get_agent_returns_constructed_agent() -> None:
             "radio_gaga.services.chat_agent.get_system_prompt", return_value="prompt"
         ),
     ):
-        chat_agent = ChatAgent(Mock(), Mock(), Mock(), Mock())
+        chat_agent = PlannerAgent(Mock(), Mock(), Mock(), Mock())
 
     assert chat_agent._agent is created_agent
 
@@ -62,7 +64,7 @@ async def test_get_session_initializes_and_terminates_session() -> None:
     compaction_service = Mock()
     session = Mock()
     session_store.load_session.return_value = session
-    chat_agent = ChatAgent(Mock(), compaction_service, session_store, Mock())
+    chat_agent = PlannerAgent(Mock(), compaction_service, session_store, Mock())
 
     async with chat_agent.get_session() as active_session:
         assert active_session is session
@@ -106,7 +108,7 @@ async def test_stream_returns_combined_text_and_logs_first_response() -> None:
             side_effect=[10.0, 10.5, 11.0],
         ),
     ):
-        chat_agent = ChatAgent(chat_client, compaction_service, Mock(), logger)
+        chat_agent = PlannerAgent(chat_client, compaction_service, Mock(), logger)
 
         response = await chat_agent.stream("question", Mock())
 
@@ -133,7 +135,7 @@ async def test_stream_allows_response_without_text_chunks() -> None:
             "radio_gaga.services.chat_agent.get_system_prompt", return_value="prompt"
         ),
     ):
-        chat_agent = ChatAgent(Mock(), Mock(), Mock(), Mock())
+        chat_agent = PlannerAgent(Mock(), Mock(), Mock(), Mock())
 
         response = await chat_agent.stream("question", Mock())
 
