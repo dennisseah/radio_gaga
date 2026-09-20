@@ -8,22 +8,22 @@ from lagom.environment import Env
 from radio_gaga.protocols.i_chat_client import IChatClient
 
 
-class ChatClientEnv(Env):
+class HarnessLLMClientEnv(Env):
     foundry_project_endpoint: str
-    foundry_model: str
+    harness_foundry_model: str
 
 
 @dataclass
-class ChatClient(IChatClient):
-    _env: ChatClientEnv
+class HarnessLLMClient(IChatClient):
+    _env: HarnessLLMClientEnv
     _logger: logging.Logger
 
     def __post_init__(self):
-        self._logger.info("Initializing FoundryChatClient")
+        self._logger.info("Initializing FoundryChatClient for HarnessLLMClient")
 
         self.client = FoundryChatClient(
             project_endpoint=self._env.foundry_project_endpoint,
-            model=self._env.foundry_model,
+            model=self._env.harness_foundry_model,
             credential=DefaultAzureCredential(),
         )
 

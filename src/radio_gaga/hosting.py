@@ -13,8 +13,6 @@ from dotenv import load_dotenv
 from lagom import Container, dependency_definition
 
 from radio_gaga.protocols.i_chat_client import IChatClient
-from radio_gaga.protocols.i_chat_history_compaction import IChatHistoryCompaction
-from radio_gaga.protocols.i_planner_agent import IPlannerAgent
 from radio_gaga.protocols.i_session_store import ISessionStore
 
 load_dotenv(dotenv_path=Path(__file__).resolve().parents[2] / ".env")
@@ -53,35 +51,11 @@ def _() -> logging.Logger:
     return radio_gaga_logger
 
 
-@dependency_definition(container, singleton=True)
-def _(c: Container) -> IPlannerAgent:
-    from radio_gaga.services.chat_agent import PlannerAgent
-
-    return c[PlannerAgent]
-
-
 @dependency_definition(container)
 def _(c: Container) -> IChatClient:
-    from radio_gaga.services.chat_client import ChatClient
+    from radio_gaga.services.harness_llm_client import HarnessLLMClient
 
-    return c[ChatClient]
-
-
-@dependency_definition(container, singleton=True)
-def _(c: Container) -> IChatHistoryCompaction:
-    strategy = os.getenv("CHAT_HISTORY_COMPACTION_STRATEGY", "by_tokens")
-    if strategy == "by_tokens":
-        from radio_gaga.services.chat_history_compaction_by_tokens import (
-            ChatHistoryCompactionByTokens,
-        )
-
-        return c[ChatHistoryCompactionByTokens]
-
-    from radio_gaga.services.chat_history_compaction_by_turns import (
-        ChatHistoryCompactionByTurns,
-    )
-
-    return c[ChatHistoryCompactionByTurns]
+    return c[HarnessLLMClient]
 
 
 @dependency_definition(container, singleton=True)

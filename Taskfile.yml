@@ -4,7 +4,7 @@ tasks:
     desc: "Runs the application"
     dir: src
     cmds:
-      - uv run python -m radio_gaga.main
+      - uv run python -m radio_gaga.agent_harness
 
   util:format-code:
     desc: "Formats the code using ruff"

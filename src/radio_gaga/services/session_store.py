@@ -1,9 +1,8 @@
 import json
 import logging
 import os
-import tempfile
 from dataclasses import dataclass
-from datetime import UTC, datetime
+from uuid import uuid4
 
 from agent_framework import Agent, AgentSession
 
@@ -23,48 +22,38 @@ class SessionStore(ISessionStore):
             return agent.create_session()
 
         try:
-            session_data = json.loads(SESSION_FILE.read_text(encoding="utf-8"))
-            return AgentSession.from_dict(session_data)
-        except (OSError, KeyError, TypeError, ValueError) as error:
-            # Preserve the broken file for diagnosis before starting fresh.
-            self._logger.warning("Unable to load saved session: %s", error)
+            with open(SESSION_FILE, encoding="utf-8") as f:  # noqa: ASYNC230
+                data = json.loads(f.read())
+            return AgentSession.from_dict(data)
+        except (json.JSONDecodeError, KeyError, TypeError, ValueError) as error:
+            self._logger.warning("Invalid session file: %s", error)
             self._quarantine_invalid_session()
             return agent.create_session()
 
+    def persist_session(self, session: AgentSession) -> None:
+        serialized = session.to_dict()
+        json_str = json.dumps(serialized, indent=2)
+        SESSION_FILE.parent.mkdir(parents=True, exist_ok=True)
+        temporary_file = SESSION_FILE.with_name(f"{SESSION_FILE.name}.{uuid4()}.tmp")
+        try:
+            with open(temporary_file, "w", encoding="utf-8") as f:  # noqa: ASYNC230
+                f.write(json_str)
+            os.replace(temporary_file, SESSION_FILE)
+        finally:
+            try:
+                os.unlink(temporary_file)
+            except FileNotFoundError:
+                pass
+
     def _quarantine_invalid_session(self) -> None:
-        invalid_path = SESSION_FILE.with_name(
-            f"{SESSION_FILE.name}.invalid-"
-            f"{datetime.now(UTC).strftime('%Y%m%dT%H%M%SZ')}"
+        quarantine_file = SESSION_FILE.with_name(
+            f"{SESSION_FILE.name}.invalid-{uuid4()}"
         )
         try:
-            os.replace(SESSION_FILE, invalid_path)
-            self._logger.warning("Moved invalid session to %s", invalid_path)
+            os.replace(SESSION_FILE, quarantine_file)
         except OSError as error:
-            self._logger.warning("Unable to quarantine invalid session: %s", error)
-
-    def persist_session(self, session: AgentSession) -> None:
-        temporary_path: str | None = None
-        try:
-            SESSION_FILE.parent.mkdir(parents=True, exist_ok=True)
-            # Write and fsync a sibling file before replacing the session atomically.
-            with tempfile.NamedTemporaryFile(
-                mode="w",
-                encoding="utf-8",
-                dir=SESSION_FILE.parent,
-                prefix=f"{SESSION_FILE.name}.",
-                suffix=".tmp",
-                delete=False,
-            ) as temporary_file:
-                temporary_path = temporary_file.name
-                json.dump(session.to_dict(), temporary_file, indent=2)
-                temporary_file.flush()
-                os.fsync(temporary_file.fileno())
-
-            os.replace(temporary_path, SESSION_FILE)
-            temporary_path = None
-        finally:
-            if temporary_path is not None:
-                try:
-                    os.unlink(temporary_path)
-                except FileNotFoundError:
-                    pass
+            self._logger.warning("Failed to quarantine invalid session file: %s", error)
+        else:
+            self._logger.warning(
+                "Quarantined invalid session file as %s", quarantine_file
+            )
