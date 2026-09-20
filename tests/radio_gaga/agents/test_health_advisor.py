@@ -1,8 +1,8 @@
 from unittest.mock import Mock, patch
 
 from radio_gaga.agents.health_advisor import HealthAdvisorLLMClientEnv, SubAgent
-from radio_gaga.services.agent_usage_middleware import AgentUsageMiddleware
-from radio_gaga.services.turn_statistics import TurnStatistics
+from radio_gaga.commons.agent_usage_middleware import AgentUsageMiddleware
+from radio_gaga.commons.turn_statistics import TurnStatistics
 
 
 def test_create_agent_configures_usage_middleware() -> None:

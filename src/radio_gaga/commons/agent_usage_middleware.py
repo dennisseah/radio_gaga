@@ -7,7 +7,7 @@ from agent_framework import (
     ResponseStream,
 )
 
-from radio_gaga.services.turn_statistics import TurnStatistics
+from radio_gaga.commons.turn_statistics import TurnStatistics
 
 
 class AgentUsageMiddleware(AgentMiddleware):

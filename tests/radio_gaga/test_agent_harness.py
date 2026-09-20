@@ -69,7 +69,29 @@ async def test_run_restores_and_persists_agent_session() -> None:
     client.get_client.return_value = model_client
     response_one = Mock(
         text="first answer",
-        messages=[],
+        messages=[
+            Message(
+                "assistant",
+                [
+                    Content.from_function_call(
+                        call_id="health-call",
+                        name="health_advisor",
+                    )
+                ],
+            ),
+            Message(
+                "tool",
+                [
+                    Content.from_function_result(
+                        "health-call",
+                        result=(
+                            '{"goal":"Answer the health question",'
+                            '"steps":["Provide general health information"]}'
+                        ),
+                    )
+                ],
+            ),
+        ],
         response_id="response-1",
         finish_reason="stop",
         usage_details={"total_token_count": 10},
@@ -151,6 +173,15 @@ async def test_run_restores_and_persists_agent_session() -> None:
         call("second question", session=session),
     ]
     assert print_output.call_args_list == [
+        call(
+            "\nExecution plan:\n"
+            "{\n"
+            '  "goal": "Answer the health question",\n'
+            '  "steps": [\n'
+            '    "Provide general health information"\n'
+            "  ]\n"
+            "}\n"
+        ),
         call("\nAnswer: first answer\n"),
         call("\nAnswer: second answer\n"),
     ]

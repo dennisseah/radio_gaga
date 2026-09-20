@@ -6,7 +6,7 @@ from radio_gaga.commons.statistics import (
     finish_and_log_turn_statistics,
     log_response_statistics,
 )
-from radio_gaga.services.turn_statistics import (
+from radio_gaga.commons.turn_statistics import (
     AgentCallUsage,
     ToolCallTiming,
     TurnStatistics,

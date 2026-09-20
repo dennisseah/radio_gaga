@@ -16,11 +16,11 @@ from radio_gaga.commons.statistics import (
     finish_and_log_turn_statistics,
     log_response_statistics,
 )
+from radio_gaga.commons.tool_timing_middleware import ToolTimingMiddleware
+from radio_gaga.commons.turn_statistics import TurnStatistics
 from radio_gaga.hosting import container
 from radio_gaga.protocols.i_chat_client import IChatClient
 from radio_gaga.protocols.i_session_store import ISessionStore
-from radio_gaga.services.tool_timing_middleware import ToolTimingMiddleware
-from radio_gaga.services.turn_statistics import TurnStatistics
 from radio_gaga.tools.medical_centers import Tool
 
 

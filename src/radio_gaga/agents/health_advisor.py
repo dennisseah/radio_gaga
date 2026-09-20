@@ -6,9 +6,9 @@ from agent_framework.foundry import FoundryChatClient
 from azure.identity import DefaultAzureCredential
 from lagom.environment import Env
 
+from radio_gaga.commons.agent_usage_middleware import AgentUsageMiddleware
 from radio_gaga.commons.prompts import get_health_advisor_prompt
-from radio_gaga.services.agent_usage_middleware import AgentUsageMiddleware
-from radio_gaga.services.turn_statistics import TurnStatistics
+from radio_gaga.commons.turn_statistics import TurnStatistics
 
 
 class HealthAdvisorLLMClientEnv(Env):

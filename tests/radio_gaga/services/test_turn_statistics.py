@@ -3,9 +3,9 @@ from unittest.mock import AsyncMock, Mock
 import pytest
 from agent_framework import AgentResponse, ResponseStream, UsageDetails
 
-from radio_gaga.services.agent_usage_middleware import AgentUsageMiddleware
-from radio_gaga.services.tool_timing_middleware import ToolTimingMiddleware
-from radio_gaga.services.turn_statistics import TurnStatistics
+from radio_gaga.commons.agent_usage_middleware import AgentUsageMiddleware
+from radio_gaga.commons.tool_timing_middleware import ToolTimingMiddleware
+from radio_gaga.commons.turn_statistics import TurnStatistics
 
 
 def test_turn_statistics_records_total_and_resets_calls() -> None:

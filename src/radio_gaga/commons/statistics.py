@@ -2,7 +2,7 @@ import logging
 
 from agent_framework import AgentResponse
 
-from radio_gaga.services.turn_statistics import TurnStatistics
+from radio_gaga.commons.turn_statistics import TurnStatistics
 
 
 def finish_and_log_turn_statistics(

@@ -2,7 +2,7 @@ from collections.abc import Awaitable, Callable
 
 from agent_framework import FunctionInvocationContext, FunctionMiddleware
 
-from radio_gaga.services.turn_statistics import TurnStatistics
+from radio_gaga.commons.turn_statistics import TurnStatistics
 
 
 class ToolTimingMiddleware(FunctionMiddleware):
